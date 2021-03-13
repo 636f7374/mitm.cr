@@ -87,14 +87,13 @@ $ make test
 
 ## Credit
 
-* [\_Icon::Freepik/GraphicDesign](https://www.flaticon.com/packs/graphic-design-125)
+* [\_Icon::Freepik/LawAndJustice](https://www.flaticon.com/packs/law-and-justice-62)
 
 ## Contributors
 
 |Name|Creator|Maintainer|Contributor|
 |:---:|:---:|:---:|:---:|
 |**[636f7374](https://github.com/636f7374)**|√|√|√|
-|**[datanoise](https://github.com/datanoise)**|||√|
 
 ## License
 
