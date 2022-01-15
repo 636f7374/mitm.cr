@@ -129,6 +129,7 @@ lib LibCrypto
   fun pem_read_bio_pubkey = PEM_read_bio_PUBKEY(bp : Bio*, x : EVP_PKEY, cb : PasswordCallback, u : Void*) : EVP_PKEY
   fun pem_read_bio_privatekey = PEM_read_bio_PrivateKey(bp : Bio*, x : EVP_PKEY, cb : PasswordCallback, u : Void*) : EVP_PKEY
   fun pem_read_bio_x509 = PEM_read_bio_X509(bp : Bio*, x : X509, cb : PasswordCallback, u : Void*) : X509
+  fun pem_read_bio_x509_aux = PEM_read_bio_X509_AUX(bp : Bio*, x : X509, cb : PasswordCallback, u : Void*) : X509
   fun pem_read_bio_x509_req = PEM_read_bio_X509_REQ(bp : Bio*, x : X509_REQ, cb : PasswordCallback, u : Void*) : X509_REQ
   fun pem_write_bio_x509 = PEM_write_bio_X509(bp : Bio*, x : X509) : LibC::Int
   fun pem_write_bio_x509_req = PEM_write_bio_X509_REQ(bp : Bio*, x : X509_REQ) : X509_REQ

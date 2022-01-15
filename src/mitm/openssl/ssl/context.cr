@@ -12,6 +12,8 @@ abstract class OpenSSL::SSL::Context
     def ca_certificate_text=(certificate : OpenSSL::X509::SuperCertificate)
       ret = LibSSL.ssl_ctx_use_certificate @handle, certificate
       raise OpenSSL::Error.new "SSL_CTX_use_certificate" unless 1_i32 == ret
+
+      certificate.attach_extra_chain_cert! ssl_context: @handle
     end
 
     # Set the private key by string, The key must in PEM format.

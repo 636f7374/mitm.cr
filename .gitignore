@@ -3,3 +3,4 @@ shard.lock
 .vscode
 /lib/
 bin/mitm*
+patch/libssl_patch.o

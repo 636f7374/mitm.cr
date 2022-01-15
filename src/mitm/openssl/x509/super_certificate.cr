@@ -26,22 +26,40 @@ module OpenSSL::X509
       NsSgc           = 10_u8
     end
 
-    def initialize(@certificate : LibCrypto::X509 = LibCrypto.x509_new)
+    getter certificate : LibCrypto::X509
+    getter certificateChains : Set(LibCrypto::X509)
+
+    def initialize(@certificate : LibCrypto::X509 = LibCrypto.x509_new, @certificateChains : Set(LibCrypto::X509) = Set(LibCrypto::X509).new)
     end
 
     def self.parse(text : String)
+      certificate_chains = Set(LibCrypto::X509).new
+
       mem_bio = MemBIO.new
       mem_bio.write data: text
 
-      x509 = LibCrypto.pem_read_bio_x509 mem_bio, nil, nil, nil
-      raise Exception.new String.build { |io| io << "SuperCertificate.parse: " << "Parse failed, get null pointer (" << x509.class << ")!" } if x509.null?
+      pointer_x509_aux = LibCrypto.pem_read_bio_x509_aux mem_bio, nil, nil, nil
+      raise Exception.new String.build { |io| io << "SuperCertificate.parse: " << "Parse failed, get null pointer (" << pointer_x509_aux.class << ")!" } if pointer_x509_aux.null?
 
-      new x509
+      loop do
+        x509_certificate = LibCrypto.pem_read_bio_x509 mem_bio, nil, nil, nil
+        break if x509_certificate.null?
+
+        certificate_chains << x509_certificate
+      end
+
+      new certificate: pointer_x509_aux, certificateChains: certificate_chains
+    end
+
+    def attach_extra_chain_cert!(ssl_context : LibSSL::SSLContext)
+      certificateChains.each { |certificate| LibSSLPatch.ssl_ctx_add_extra_chain_cert ssl_context, certificate }
+      @certificateChains = Set(LibCrypto::X509).new
+
+      true
     end
 
     def public_key
-      OpenSSL::PKey.new LibCrypto.x509_get_pubkey(self),
-        OpenSSL::PKey::KeyFlag::PUBLIC_KEY
+      OpenSSL::PKey.new pkey: LibCrypto.x509_get_pubkey(self), keyType: OpenSSL::PKey::KeyFlag::PUBLIC_KEY
     end
 
     def pkey
@@ -208,6 +226,7 @@ module OpenSSL::X509
 
       {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0_i32 %}
         ret = LibCrypto.x509_set1_notbefore self, asn1
+        LibCrypto.asn1_time_free asn1
       {% else %}
         ret = LibCrypto.x509_set_notbefore self, asn1
       {% end %}
@@ -226,6 +245,7 @@ module OpenSSL::X509
 
       {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0_i32 %}
         ret = LibCrypto.x509_set1_notafter self, asn1
+        LibCrypto.asn1_time_free asn1
       {% else %}
         ret = LibCrypto.x509_set_notafter self, asn1
       {% end %}

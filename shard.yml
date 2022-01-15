@@ -1,8 +1,15 @@
 name: mitm
 version: 1.0.0
 
+targets:
+  mitm:
+    main: src/mitm.cr
+
 authors:
   - 636f7374
+
+scripts:
+  postinstall: cd patch && make
 
 crystal: ">= 1.0.0"
 license: BSDv3
