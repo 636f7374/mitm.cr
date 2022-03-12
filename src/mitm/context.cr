@@ -22,9 +22,9 @@ struct Mitm::Context
     client
   end
 
-  def create_context_server(request : HTTP::Request) : OpenSSL::SSL::Context::Server
-    return unless host = request.host
-    create_context_server hostname: host
+  def create_context_server(request : HTTP::Request) : OpenSSL::SSL::Context::Server?
+    return unless hostname = request.hostname
+    create_context_server hostname: hostname
   end
 
   private def create_context_server(text_certificate : String, text_private_key : String) : OpenSSL::SSL::Context::Server
