@@ -72,7 +72,6 @@ struct Mitm::Context
     certificate.extensions = [
       extension_factory.create(OpenSSL::NID::NID_basic_constraints, "CA:FALSE", true),
       extension_factory.create(OpenSSL::NID::NID_subject_key_identifier, "hash", false),
-      extension_factory.create(OpenSSL::NID::NID_authority_key_identifier, "keyid:always,issuer:always", true),
       extension_factory.create_subject_alt_name(hostname),
       extension_factory.create_ext_usage(OpenSSL::X509::SuperCertificate::ExtKeyUsage::ServerAuth),
       extension_factory.create_usage([
