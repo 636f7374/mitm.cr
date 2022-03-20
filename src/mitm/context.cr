@@ -1,4 +1,4 @@
-struct Mitm::Context
+class Mitm::Context
   getter rootCertificate : String
   getter rootPrivateKey : String
   getter caching : Caching
@@ -7,12 +7,15 @@ struct Mitm::Context
   property notBefore : Int64
   property notAfter : Int64
 
-  def initialize(@rootCertificate : String = String.new, @rootPrivateKey : String = String.new, capacity : Int32 = 1024_i32)
-    @caching = Caching.new capacity: capacity
+  def initialize(@rootCertificate : String, @rootPrivateKey : String, @caching : Caching)
     @country = "FI"
     @location = "Helsinki"
     @notBefore = -1_i64
     @notAfter = 365_i64
+  end
+
+  def self.new(root_certificate : String, root_private_key : String, capacity : Int32)
+    new rootCertificate: root_certificate, rootPrivateKey: root_private_key, caching: Caching.new(capacity: capacity)
   end
 
   def self.create_client(verify_mode = OpenSSL::SSL::VerifyMode::NONE) : OpenSSL::SSL::Context::Client
@@ -88,6 +91,12 @@ struct Mitm::Context
     server = OpenSSL::SSL::Context::Server.new
     server.ca_certificate_text = certificate
     server.private_key_text = private_key.pkey
+
+    root_private_key.free
+    private_key.free
+    x509_name.free
+    root_certificate.free
+    certificate.free
 
     server
   end

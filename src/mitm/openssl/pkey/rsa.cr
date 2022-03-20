@@ -1,9 +1,15 @@
 module OpenSSL
   class PKey
     class RSA < PKey
-      def initialize(@rsa : LibCrypto::RSA, @keyType = KeyFlag::ALL)
+      getter rsa : LibCrypto::RSA
+      getter keyType : KeyFlag
+      getter pkey : LibCrypto::EVP_PKEY
+      getter freed : Bool
+
+      def initialize(@rsa : LibCrypto::RSA, @keyType : KeyFlag = KeyFlag::ALL)
         @pkey = LibCrypto.evp_pkey_new
         LibCrypto.evp_pkey_assign @pkey, OpenSSL::NID::NID_rsaEncryption, @rsa.as(Pointer(Void*))
+        @freed = false
       end
 
       def self.new(bits : Int = 4096_i32)
@@ -95,9 +101,14 @@ module OpenSSL
         RSA.new rsa: public_key_rsa, keyType: KeyFlag::PUBLIC_KEY
       end
 
-      def finalize
-        return if @pkey.null?
+      def free : Bool
+        return false if freed
         LibCrypto.evp_pkey_free @pkey
+        @freed = true
+      end
+
+      def finalize
+        free
       end
 
       def to_unsafe

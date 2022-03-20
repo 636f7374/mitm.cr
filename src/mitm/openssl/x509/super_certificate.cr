@@ -28,8 +28,10 @@ module OpenSSL::X509
 
     getter certificate : LibCrypto::X509
     getter certificateChains : Set(LibCrypto::X509)
+    getter freed : Bool
 
     def initialize(@certificate : LibCrypto::X509 = LibCrypto.x509_new, @certificateChains : Set(LibCrypto::X509) = Set(LibCrypto::X509).new)
+      @freed = false
     end
 
     def self.parse(text : String)
@@ -226,7 +228,6 @@ module OpenSSL::X509
 
       {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0_i32 %}
         ret = LibCrypto.x509_set1_notbefore self, asn1
-        LibCrypto.asn1_time_free asn1
       {% else %}
         ret = LibCrypto.x509_set_notbefore self, asn1
       {% end %}
@@ -245,7 +246,6 @@ module OpenSSL::X509
 
       {% if compare_versions(LibSSL::OPENSSL_VERSION, "1.0.2") >= 0_i32 %}
         ret = LibCrypto.x509_set1_notafter self, asn1
-        LibCrypto.asn1_time_free asn1
       {% else %}
         ret = LibCrypto.x509_set_notafter self, asn1
       {% end %}
@@ -263,9 +263,14 @@ module OpenSSL::X509
       Random.rand Int32::MAX
     end
 
-    def finalize
-      return if @certificate.null?
+    def free : Bool
+      return false if freed
       LibCrypto.x509_free self
+      @freed = true
+    end
+
+    def finalize
+      free
     end
 
     def to_unsafe

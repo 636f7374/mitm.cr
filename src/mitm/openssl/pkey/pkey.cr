@@ -8,8 +8,10 @@ module OpenSSL
 
     getter keyType : KeyFlag
     getter pkey : LibCrypto::EVP_PKEY
+    getter freed : Bool
 
     def initialize(@pkey : LibCrypto::EVP_PKEY = LibCrypto.evp_pkey_new, @keyType = KeyFlag::ALL)
+      @freed = false
     end
 
     def self.parse_public_key(text : String, password = nil)
@@ -58,9 +60,14 @@ module OpenSSL
       LibCrypto.evp_pkey_size self
     end
 
-    def finalize
-      return if @pkey.null?
+    def free : Bool
+      return false if freed
       LibCrypto.evp_pkey_free @pkey
+      @freed = true
+    end
+
+    def finalize
+      free
     end
 
     def to_unsafe

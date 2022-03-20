@@ -1,9 +1,15 @@
 module OpenSSL
   class PKey
     class DSA < PKey
-      def initialize(@dsa : LibCrypto::DSA, @keyType = KeyFlag::ALL)
+      getter dsa : LibCrypto::DSA
+      getter keyType : KeyFlag
+      getter pkey : LibCrypto::EVP_PKEY
+      getter freed : Bool
+
+      def initialize(@dsa : LibCrypto::DSA, @keyType : KeyFlag = KeyFlag::ALL)
         @pkey = LibCrypto.evp_pkey_new
         LibCrypto.evp_pkey_assign @pkey, OpenSSL::NID::NID_dsa, @dsa.as(Pointer(Void*))
+        @freed = false
       end
 
       def self.new(bits : Int = 4096_i32)
@@ -101,9 +107,14 @@ module OpenSSL
         DSA.parse_public_key text: public_key
       end
 
-      def finalize
-        return if @pkey.null?
+      def free : Bool
+        return false if freed
         LibCrypto.evp_pkey_free @pkey
+        @freed = true
+      end
+
+      def finalize
+        free
       end
 
       def to_unsafe

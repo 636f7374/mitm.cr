@@ -21,6 +21,8 @@ class Mitm::Caching
   end
 
   def set(hostname : String, entry : Tuple(String, String)) : Bool
+    return false if capacity.zero?
+
     @mutex.synchronize do
       entries.shift if capacity == entries.size
       return false if entries[hostname]?

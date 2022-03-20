@@ -1,7 +1,11 @@
 module OpenSSL::X509
   class SuperName
+    getter name : LibCrypto::X509_NAME
+    getter freed : Bool
+
     def initialize(name : LibCrypto::X509_NAME = LibCrypto.x509_name_new)
       @name = LibCrypto.x509_name_dup name
+      @freed = false
     end
 
     def self.parse(value : String) : SuperName
@@ -51,9 +55,14 @@ module OpenSSL::X509
       end
     end
 
-    def finalize
-      return if @name.null?
+    def free : Bool
+      return false if freed
       LibCrypto.x509_name_free self
+      @freed = true
+    end
+
+    def finalize
+      free
     end
 
     def to_unsafe
