@@ -19,6 +19,7 @@ module OpenSSL
       mem_bio.write data: text
 
       pkey = LibCrypto.pem_read_bio_pubkey mem_bio, nil, nil, password
+      mem_bio.free
       raise Exception.new String.build { |io| io << "PKey.parse_public_key: " << "Parse failed, get null pointer (" << pkey.class << ")!" } if pkey.null?
 
       new pkey, KeyFlag::PUBLIC_KEY
@@ -29,6 +30,7 @@ module OpenSSL
       mem_bio.write data: text
 
       pkey = LibCrypto.pem_read_bio_privatekey mem_bio, nil, nil, password
+      mem_bio.free
       raise Exception.new String.build { |io| io << "PKey.parse_private_key: " << "Parse failed, get null pointer (" << pkey.class << ")!" } if pkey.null?
 
       new pkey, KeyFlag::PRIVATE_KEY

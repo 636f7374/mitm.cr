@@ -64,7 +64,7 @@ module OpenSSL::X509
       ctx = LibCrypto::X509V3_CTX.new
       LibCrypto.x509v3_set_ctx pointerof(ctx), issuer, subject, nil, nil, 0_i32
 
-      ret = LibCrypto.x509v3_ext_conf_nid nil, pointerof(ctx), nid, build_value value, critical
+      ret = LibCrypto.x509v3_ext_conf_nid nil, pointerof(ctx), nid, build_value(value, critical)
       raise Error.new "X509V3_EXT_conf_nid" if ret.null?
 
       ret

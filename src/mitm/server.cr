@@ -1,13 +1,19 @@
 module Mitm::Server
   def self.upgrade(io : IO, hostname : String, mitm_context : Mitm::Context, options : Set(LibSSL::Options)? = nil, alpn_protocol : String? = nil) : Tuple(OpenSSL::SSL::Context::Server?, IO)
-    return Tuple.new nil, io unless context = mitm_context.create_context_server hostname: hostname
+    ssl_context = mitm_context.create_context_server hostname: hostname
+    alpn_protocol.try { |_alpn_protocol| ssl_context.alpn_protocol = _alpn_protocol }
+    options.try &.each { |option| ssl_context.add_options options: option }
 
-    alpn_protocol.try { |_alpn_protocol| context.alpn_protocol = _alpn_protocol }
-    options.try &.each { |option| context.add_options options: option } rescue nil
+    begin
+      upgraded = OpenSSL::SSL::Socket::Server.new io: io, context: ssl_context, sync_close: true
+      upgraded.sync = true
+    rescue ex
+      upgraded.try &.close rescue nil
+      ssl_context.free
 
-    upgraded = OpenSSL::SSL::Socket::Server.new io: io, context: context, sync_close: true rescue nil
-    upgraded.sync = true if upgraded
+      return Tuple.new nil, io
+    end
 
-    Tuple.new context, (upgraded || io)
+    Tuple.new ssl_context, upgraded
   end
 end

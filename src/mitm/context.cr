@@ -93,10 +93,11 @@ class Mitm::Context
     server.private_key_text = private_key.pkey
 
     root_private_key.free
-    private_key.free
-    x509_name.free
     root_certificate.free
+    private_key.free
     certificate.free
+    x509_name.free
+    issuer_name.free
 
     server
   end
@@ -136,6 +137,11 @@ class Mitm::Context
     ]
 
     certificate.sign pkey: private_key.pkey
+
+    private_key.free
+    certificate.free
+    x509_name.free
+
     Tuple.new certificate.to_s, private_key.to_s(OpenSSL::PKey::KeyFlag::PRIVATE_KEY)
   end
 end

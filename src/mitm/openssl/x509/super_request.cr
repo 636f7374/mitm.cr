@@ -1,6 +1,9 @@
 module OpenSSL::X509
   class SuperRequest
+    getter freed : Bool
+
     def initialize(@req : LibCrypto::X509_REQ)
+      @freed = false
     end
 
     def self.new
@@ -19,6 +22,7 @@ module OpenSSL::X509
       mem_bio.write data: text
 
       x509_req = LibCrypto.pem_read_bio_x509_req mem_bio, nil, nil, password
+      mem_bio.free
       raise Exception.new String.build { |io| io << "SuperRequest.parse: " << "Parse failed, get null pointer (" << x509_req.class << ")!" } if x509_req.null?
 
       new x509_req
@@ -86,15 +90,20 @@ module OpenSSL::X509
     def to_io(io : IO)
       mem_bio = OpenSSL::MemBIO.new
       LibCrypto.pem_write_bio_x509_req mem_bio, self
-
       mem_bio.to_io io
 
+      mem_bio.free
       io
     end
 
-    def finalize
-      return if @req.null?
+    def free : Bool
+      return false if freed
       LibCrypto.x509_req_free self
+      @freed = true
+    end
+
+    def finalize
+      free
     end
 
     def to_unsafe

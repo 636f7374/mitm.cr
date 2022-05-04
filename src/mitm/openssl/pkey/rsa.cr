@@ -25,6 +25,7 @@ module OpenSSL
         mem_bio.write data: text
 
         rsa_key = LibCrypto.pem_read_bio_rsapublickey mem_bio, nil, nil, password
+        mem_bio.free
         raise Exception.new String.build { |io| io << "RSA.parse_public_key: " << "Parse failed, get null pointer (" << rsa_key.class << ")!" } if rsa_key.null?
 
         new rsa: rsa_key, keyType: KeyFlag::PUBLIC_KEY
@@ -35,6 +36,7 @@ module OpenSSL
         mem_bio.write data: text
 
         rsa_key = LibCrypto.pem_read_bio_rsaprivatekey mem_bio, nil, nil, password
+        mem_bio.free
         raise Exception.new String.build { |io| io << "RSA.parse_private_key: " << "Parse failed, get null pointer (" << rsa_key.class << ")!" } if rsa_key.null?
 
         new rsa: rsa_key, keyType: KeyFlag::PRIVATE_KEY
@@ -68,6 +70,7 @@ module OpenSSL
         in .all?
         end
 
+        mem_bio.free
         io
       end
 

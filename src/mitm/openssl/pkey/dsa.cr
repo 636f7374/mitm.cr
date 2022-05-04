@@ -45,6 +45,7 @@ module OpenSSL
         mem_bio.write data: text
 
         dsa_key = LibCrypto.pem_read_bio_dsaprivatekey mem_bio, nil, nil, password
+        mem_bio.free
         raise Exception.new String.build { |io| io << "DSA.parse_private_key: " << "Parse failed, get null pointer (" << dsa_key.class << ")!" } if dsa_key.null?
 
         new dsa: dsa_key, keyType: KeyFlag::PRIVATE_KEY
@@ -78,6 +79,7 @@ module OpenSSL
         in .all?
         end
 
+        mem_bio.free
         io
       end
 

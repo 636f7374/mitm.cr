@@ -1,5 +1,8 @@
 class OpenSSL::MemBIO < IO
+  getter freed : Bool
+
   def initialize(@bio : LibCrypto::Bio* = LibCrypto.bio_new(LibCrypto.bio_s_mem))
+    @freed = false
   end
 
   def read(data : Bytes)
@@ -32,9 +35,14 @@ class OpenSSL::MemBIO < IO
     String.new io.to_slice
   end
 
-  def finalize
-    return if @bio.null?
+  def free : Bool
+    return false if freed
     LibCrypto.bio_free_all self
+    @freed = true
+  end
+
+  def finalize
+    free
   end
 
   def to_unsafe
