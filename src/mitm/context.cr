@@ -93,9 +93,9 @@ class Mitm::Context
     server.private_key_text = private_key.pkey
 
     # root_private_key.free
-    root_certificate.free
-    private_key.free
-    certificate.free
+    # root_certificate.free
+    # private_key.free
+    # certificate.free
     # x509_name.free
     # issuer_name.free
 
