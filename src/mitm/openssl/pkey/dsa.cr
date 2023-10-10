@@ -1,5 +1,10 @@
 module OpenSSL
   class PKey
+    # DSA_generate_key: https://www.openssl.org/docs/man3.1/man3/DSA_generate_key.html
+    # The following functions have been deprecated since OpenSSL 3.0, and can be hidden entirely by defining OPENSSL_API_COMPAT with a suitable version value, see openssl_user_macros(7):
+    # Fixing this problem will take a lot of time, and the DSA is temporarily on hold.
+
+    @[Deprecated]
     class DSA < PKey
       getter dsa : LibCrypto::DSA
       getter keyType : KeyFlag

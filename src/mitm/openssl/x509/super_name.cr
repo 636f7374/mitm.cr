@@ -3,8 +3,8 @@ module OpenSSL::X509
     getter name : LibCrypto::X509_NAME
     getter freed : Bool
 
-    def initialize(name : LibCrypto::X509_NAME = LibCrypto.x509_name_new)
-      @name = LibCrypto.x509_name_dup name
+    def initialize(name : LibCrypto::X509_NAME? = nil)
+      @name = name.nil? ? LibCrypto.x509_name_new : LibCrypto.x509_name_dup(name)
       @freed = false
     end
 

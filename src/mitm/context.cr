@@ -73,8 +73,8 @@ class Mitm::Context
     extension_factory = OpenSSL::X509::ExtensionFactory.new certificate: root_certificate
 
     certificate.extensions = [
-      extension_factory.create(OpenSSL::NID::NID_basic_constraints, "CA:FALSE", true),
-      extension_factory.create(OpenSSL::NID::NID_subject_key_identifier, "hash", false),
+      # extension_factory.create(OpenSSL::NID::NID_basic_constraints, "CA:FALSE", true),
+      # extension_factory.create(OpenSSL::NID::NID_subject_key_identifier, "hash", false),
       extension_factory.create_subject_alt_name(hostname),
       extension_factory.create_ext_usage(OpenSSL::X509::SuperCertificate::ExtKeyUsage::ServerAuth),
       extension_factory.create_usage([
@@ -92,12 +92,12 @@ class Mitm::Context
     server.ca_certificate_text = certificate
     server.private_key_text = private_key.pkey
 
-    root_private_key.free
+    # root_private_key.free
     root_certificate.free
     private_key.free
     certificate.free
-    x509_name.free
-    issuer_name.free
+    # x509_name.free
+    # issuer_name.free
 
     server
   end

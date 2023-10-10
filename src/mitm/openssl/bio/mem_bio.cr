@@ -5,16 +5,16 @@ class OpenSSL::MemBIO < IO
     @freed = false
   end
 
-  def read(data : Bytes)
-    LibCrypto.bio_read self, data, data.size
+  def read(slice : Bytes)
+    LibCrypto.bio_read self, slice, slice.size
   end
 
   def write(data : String) : Nil
-    write data.to_slice
+    write slice: data.to_slice
   end
 
-  def write(data : Bytes) : Nil
-    LibCrypto.bio_write self, data, data.size
+  def write(slice : Bytes) : Nil
+    LibCrypto.bio_write self, slice, slice.size
   end
 
   def reset

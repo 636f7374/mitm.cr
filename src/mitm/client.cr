@@ -6,9 +6,6 @@ module Mitm::Client
 
     upgraded = begin
       tls_socket = OpenSSL::SSL::Socket::Client.new io: io, context: tls_context, sync_close: true, hostname: hostname
-      tls_socket.ssl_context = tls_context
-
-      tls_socket
     rescue ex
       io.close rescue nil
       tls_socket.try &.close rescue nil
