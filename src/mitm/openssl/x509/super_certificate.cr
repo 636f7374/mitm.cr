@@ -45,7 +45,7 @@ module OpenSSL::X509
       if pointer_x509_aux.null?
         mem_bio.free
 
-        raise Exception.new String.build { |io| io << "SuperCertificate.parse: " << "Parse failed, get null pointer (" << pointer_x509_aux.class << ")!" }
+        raise Error.new "PEM_read_bio_X509_AUX"
       end
 
       loop do
@@ -56,6 +56,7 @@ module OpenSSL::X509
       end
 
       mem_bio.free
+
       new certificate: pointer_x509_aux, certificateChains: certificate_chains
     end
 
@@ -209,20 +210,33 @@ module OpenSSL::X509
       ret
     end
 
-    def extension=(item = LibCrypto::X509_EXTENSION)
+    def extension=(item = X509::SuperExtension)
       self.extensions = [item]
     end
 
     def extensions=(list : Array(LibCrypto::X509_EXTENSION))
-      list.each do |item|
-        unless LibCrypto.x509_add_ext(self, item, -1_i32).null?
-          LibCrypto.x509_extension_free item
+      list.each do |_extension|
+        unless LibCrypto.x509_add_ext(self, _extension, -1_i32).null?
+          LibCrypto.x509_extension_free _extension
 
           next
         end
 
-        LibCrypto.x509_extension_free item
-        raise OpenSSL::Error.new "X509_add_ext"
+        LibCrypto.x509_extension_free _extension
+        raise Error.new "X509_add_ext"
+      end
+    end
+
+    def extensions=(list : Array(X509::SuperExtension))
+      list.each do |_extension|
+        unless LibCrypto.x509_add_ext(self, _extension, -1_i32).null?
+          _extension.free
+
+          next
+        end
+
+        _extension.free
+        raise Error.new "X509_add_ext"
       end
     end
 
@@ -232,7 +246,7 @@ module OpenSSL::X509
       Array(Extension).new count do |item|
         ext = LibCrypto.x509_get_ext self, item
 
-        Extension.new ext
+        Extension.new ext: ext
       end
     end
 
@@ -248,7 +262,7 @@ module OpenSSL::X509
     end
 
     def sign(pkey : OpenSSL::PKey | LibCrypto::EVP_PKEY, algorithm = LibCrypto.evp_sha256)
-      raise OpenSSL::Error.new "X509_sign" if LibCrypto.x509_sign(self, pkey, algorithm).zero?
+      raise Error.new "X509_sign" if LibCrypto.x509_sign(self, pkey, algorithm).zero?
     end
 
     def to_s : String
@@ -268,7 +282,7 @@ module OpenSSL::X509
     end
 
     def random_serial : Int32
-      Random.rand Int32::MAX
+      Random.rand x: Int32::MAX
     end
 
     def free : Bool

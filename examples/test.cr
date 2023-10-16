@@ -19,5 +19,5 @@ context_server = mitm_context.create_context_server hostname: "www.google.com"
 server = HTTP::Server.new { |context| STDOUT.puts [context] }
 address = server.bind_tls host: "0.0.0.0", port: 1234_i32, context: context_server
 
-puts "Listening on http://#{address}"
+puts "Listening on https://#{address}"
 server.listen

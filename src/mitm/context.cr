@@ -70,20 +70,12 @@ class Mitm::Context
     certificate.subject_name = x509_name
     certificate.issuer_name = issuer_name
 
-    extension_factory = OpenSSL::X509::ExtensionFactory.new certificate: root_certificate
-
-    certificate.extensions = [
-      # extension_factory.create(OpenSSL::NID::NID_basic_constraints, "CA:FALSE", true),
-      # extension_factory.create(OpenSSL::NID::NID_subject_key_identifier, "hash", false),
-      extension_factory.create_subject_alt_name(hostname),
-      extension_factory.create_ext_usage(OpenSSL::X509::SuperCertificate::ExtKeyUsage::ServerAuth),
-      extension_factory.create_usage([
-        OpenSSL::X509::SuperCertificate::KeyUsage::NonRepudiation,
-        OpenSSL::X509::SuperCertificate::KeyUsage::DigitalSignature,
-        OpenSSL::X509::SuperCertificate::KeyUsage::KeyEncipherment,
-        OpenSSL::X509::SuperCertificate::KeyUsage::DataEncipherment,
-      ]),
-    ]
+    extended_key_usage = OpenSSL::X509::SuperExtension.new nid: OpenSSL::NID::NID_ext_key_usage.value, value: [OpenSSL::EXTENDED_KEY_USAGE[:SERVER_AUTH]].join(", "), critical: false
+    key_usage = OpenSSL::X509::SuperExtension.new nid: OpenSSL::NID::NID_key_usage.value, value: [OpenSSL::KEY_USAGE[:NON_REPUDIATION], OpenSSL::KEY_USAGE[:DIGITAL_SIGNATURE], OpenSSL::KEY_USAGE[:KEY_ENCIPHERMENT], OpenSSL::KEY_USAGE[:DATA_ENCIPHERMENT]].join(", "), critical: true
+    subject_alt_name = OpenSSL::X509::SuperExtension.new nid: OpenSSL::NID::NID_subject_alt_name.value, value: OpenSSL.generate_subject_alt_name(domains: [hostname]), critical: false
+    basic_constraints = OpenSSL::X509::SuperExtension.new nid: OpenSSL::NID::NID_basic_constraints.value, value: "CA:FALSE", critical: true
+    #  subject_key_identifier = OpenSSL::X509::Extension.new nid: OpenSSL::NID::NID_subject_key_identifier.value, value: "hash", critical: false # => X509V3_EXT_nconf_nid: error:1100007D:X509 V3 routines::no subject details (OpenSSL::Error) (?)
+    certificate.extensions = [extended_key_usage, key_usage, subject_alt_name, basic_constraints]
 
     certificate.sign pkey: root_private_key
     caching.set hostname: hostname, entry: Tuple.new certificate.to_s, private_key.to_s(OpenSSL::PKey::KeyFlag::PRIVATE_KEY)
@@ -101,47 +93,6 @@ class Mitm::Context
 
     server
   end
-
-  def create_root_context_tuple(modulus_size : Int32 = 2048_i32) : Tuple(String, String)
-    private_key = OpenSSL::PKey::RSA.new bits: modulus_size
-    certificate = OpenSSL::X509::SuperCertificate.new
-
-    x509_name = OpenSSL::X509::SuperName.new
-    x509_name.add_entry oid: "C", value: country
-    x509_name.add_entry oid: "ST", value: " "
-    x509_name.add_entry oid: "L", value: location
-    x509_name.add_entry oid: "O", value: " "
-    x509_name.add_entry oid: "OU", value: " "
-
-    certificate.version = 2_i32
-    certificate.serial = certificate.random_serial
-    certificate.not_before = notBefore
-    certificate.not_after = notAfter
-    certificate.public_key = private_key.pkey
-    certificate.subject_name = x509_name
-    certificate.issuer_name = x509_name
-
-    extension_factory = OpenSSL::X509::ExtensionFactory.new certificate: certificate
-
-    certificate.extensions = [
-      extension_factory.create(OpenSSL::NID::NID_basic_constraints, "CA:FALSE", true),
-      extension_factory.create(OpenSSL::NID::NID_subject_key_identifier, "hash", false),
-      extension_factory.create(OpenSSL::NID::NID_authority_key_identifier, "keyid,issuer"),
-      extension_factory.create_ext_usage(OpenSSL::X509::SuperCertificate::ExtKeyUsage::ServerAuth),
-      extension_factory.create_usage([
-        OpenSSL::X509::SuperCertificate::KeyUsage::NonRepudiation,
-        OpenSSL::X509::SuperCertificate::KeyUsage::DigitalSignature,
-        OpenSSL::X509::SuperCertificate::KeyUsage::KeyEncipherment,
-        OpenSSL::X509::SuperCertificate::KeyUsage::DataEncipherment,
-      ]),
-    ]
-
-    certificate.sign pkey: private_key.pkey
-
-    private_key.free
-    certificate.free
-    x509_name.free
-
-    Tuple.new certificate.to_s, private_key.to_s(OpenSSL::PKey::KeyFlag::PRIVATE_KEY)
-  end
 end
+
+require "openssl/x509"
