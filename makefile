@@ -1,5 +1,5 @@
 CC=cc
-CFLAGS=-Wall -I/usr/local/opt/openssl/include
+CFLAGS=-Wall -I$(shell pkg-config --silence-errors --variable=includedir libssl)
 
 test: shard
 	crystal spec
